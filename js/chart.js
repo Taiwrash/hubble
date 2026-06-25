@@ -201,27 +201,20 @@ export function renderDonut(svgEl, segments, totalRepos) {
   }
 }
 
-/* ─── Legend Rendering ────────────────────────────── */
-
-/**
- * Render the language legend.
- * @param {HTMLElement} container
- * @param {{ name: string; pct: number; color: string }[]} segments
- */
 export function renderLegend(container, segments) {
   container.innerHTML = '';
 
   if (segments.length === 0) {
-    container.innerHTML = '<p class="chart-loading-msg">No language data yet.</p>';
+    container.innerHTML = '<li class="chart-loading-msg">No language data yet.</li>';
     return;
   }
 
   segments.forEach((seg, i) => {
-    const item = document.createElement('div');
+    const item = document.createElement('li');
     item.className = 'legend-item';
     item.style.animationDelay = `${i * 50}ms`;
     item.innerHTML = `
-      <span class="legend-dot" style="background:${seg.color}"></span>
+      <span class="legend-dot" style="background:${seg.color}" aria-hidden="true"></span>
       <span class="legend-name">${seg.name}</span>
       <span class="legend-pct">${seg.pct.toFixed(1)}%</span>
     `;

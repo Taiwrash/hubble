@@ -26,12 +26,21 @@ const rateLimitEl = $('rate-limit');
 const rateDotEl   = $('rate-dot');
 const rateCountEl = $('rate-count');
 const mainContent = $('main-content');
+const headerInner = $$('.header-inner');
 
 /* Chart elements are rendered dynamically — look them up lazily */
 const getChartSvg       = () => $('donut-svg');
 const getChartLegend    = () => $('chart-legend');
 const getChartCenterNum = () => $('chart-center-num');
 const getChartCenterLbl = () => $('chart-center-lbl');
+
+/* Accessibility Screen Reader Announcer helper */
+function announce(message) {
+  const announcer = $('sr-announcer');
+  if (announcer) {
+    announcer.textContent = message;
+  }
+}
 
 /* ─── State ───────────────────────────────────────── */
 let currentUsername  = null;
@@ -93,11 +102,13 @@ async function startSearch(username) {
   totalRepos      = 0;
 
   setLoading(true); // also calls clearContent()
+  announce(`Loading GitHub profile for ${username}...`);
 
   try {
     /* ── Step 1: Profile ─────────────────────── */
     const user = await fetchUser(username);
     renderProfile(user);
+    announce(`Loaded profile for ${user.name || user.login}.`);
 
     /* ── Step 2: Repositories ────────────────── */
     const repos = await fetchRepos(username);
@@ -107,12 +118,96 @@ async function startSearch(username) {
     /* ── Step 3: Stream Language Data ─────────── */
     setLoading(false);
     showLiveIndicator(true);
+    showHideResultsBtn(true);
+    announce(`Loaded profile and ${repos.length} repositories for ${username}. Analysing programming languages...`);
     streamLanguages(username, repos, abortController.signal);
 
   } catch (err) {
     setLoading(false);
+    showHideResultsBtn(true);
     renderError(err);
+    announce(`Error loading profile: ${err.message || err}`);
   }
+}
+
+/* ─── Hide Results ────────────────────────────────── */
+function showHideResultsBtn(on) {
+  let btn = $('hide-results-btn');
+
+  if (on) {
+    if (btn) return; // already present
+    btn = document.createElement('button');
+    btn.id = 'hide-results-btn';
+    btn.className = 'hide-results-btn';
+    btn.setAttribute('aria-label', 'Hide results and return to home');
+    btn.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+        <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/>
+      </svg>
+      Hide Results
+    `;
+    btn.addEventListener('click', hideResults);
+    headerInner.appendChild(btn);
+  } else {
+    btn?.remove();
+  }
+}
+
+function hideResults() {
+  /* Cancel any in-flight requests */
+  if (abortController) {
+    abortController.abort();
+    abortController = null;
+  }
+
+  /* Reset state */
+  langAccumulator = {};
+  reposAnalysed   = 0;
+  totalRepos      = 0;
+  currentUsername = null;
+  searchInput.value = '';
+
+  /* Remove button */
+  showHideResultsBtn(false);
+
+  /* Restore hero */
+  mainContent.innerHTML = `
+    <div class="hero" id="hero-section">
+      <div class="animate-fade-up">
+        <h1 class="hero-title">Explore any<br>GitHub profile.</h1>
+      </div>
+      <p class="hero-subtitle animate-fade-up" style="animation-delay:80ms">
+        Search a username to see repos, language breakdowns,
+        and profile analytics — live.
+      </p>
+      <div class="hero-hint animate-fade-up" style="animation-delay:160ms">
+        <span>Try</span>
+        <code>taiwrash</code>
+        <span>or</span>
+        <code>torvalds</code>
+      </div>
+      <div class="example-tags animate-fade-up" style="animation-delay:220ms" aria-label="Example GitHub usernames">
+        <button class="example-tag" data-user="taiwrash" aria-label="Search taiwrash">taiwrash</button>
+        <button class="example-tag" data-user="torvalds" aria-label="Search torvalds">torvalds</button>
+        <button class="example-tag" data-user="gaearon"  aria-label="Search gaearon">gaearon</button>
+        <button class="example-tag" data-user="sindresorhus" aria-label="Search sindresorhus">sindresorhus</button>
+        <button class="example-tag" data-user="DHH"      aria-label="Search DHH">DHH</button>
+        <button class="example-tag" data-user="yyx990803" aria-label="Search yyx990803">yyx990803</button>
+      </div>
+      <div style="margin-top:var(--s-10);opacity:0.06" aria-hidden="true">
+        <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="100" cy="100" r="90" fill="none" stroke="#1A1A18" stroke-width="1"/>
+          <circle cx="100" cy="100" r="70" fill="none" stroke="#1A1A18" stroke-width="1"/>
+          <circle cx="100" cy="100" r="50" fill="none" stroke="#1A1A18" stroke-width="1"/>
+          <circle cx="100" cy="100" r="30" fill="none" stroke="#1A1A18" stroke-width="1"/>
+          <circle cx="100" cy="100" r="6" fill="#1A1A18"/>
+        </svg>
+      </div>
+    </div>
+  `;
+
+  announce("Results hidden. Returned to home page.");
+  searchInput.focus();
 }
 
 /* ─── Stream Language Analysis ────────────────────── */
@@ -191,7 +286,7 @@ function renderProfile(user) {
              width="88" height="88">
       </div>
       <div class="user-info">
-        <div class="user-name">${escHtml(user.name)}</div>
+        <h1 class="user-name">${escHtml(user.name)}</h1>
         <div class="user-login">@${escHtml(user.login)}</div>
         ${user.bio ? `<p class="user-bio">${escHtml(user.bio)}</p>` : ''}
         <div class="user-meta">
@@ -314,9 +409,9 @@ function renderRepos(repos) {
           <div class="ct-label"  id="chart-center-lbl">languages</div>
         </div>
       </div>
-      <div class="legend" id="chart-legend">
-        <p class="chart-loading-msg">Fetching language data…</p>
-      </div>
+      <ul class="legend" id="chart-legend" aria-label="Programming languages breakdown">
+        <li class="chart-loading-msg">Fetching language data…</li>
+      </ul>
     </div>
   `;
 
@@ -428,9 +523,12 @@ function setLoading(on) {
     : `${searchIcon()} Search`;
 
   if (on) {
+    mainContent.setAttribute('aria-busy', 'true');
     clearContent();
     mainContent.appendChild(skeletonProfile());
     mainContent.appendChild(skeletonRepos());
+  } else {
+    mainContent.removeAttribute('aria-busy');
   }
 }
 
@@ -481,50 +579,50 @@ function clearContent() {
 
 /* ─── SVG Icon Helpers ────────────────────────────── */
 function calendarIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="M4.75 0a.75.75 0 0 1 .75.75V2h5V.75a.75.75 0 0 1 1.5 0V2h1.25c.966 0 1.75.784 1.75 1.75v10.5A1.75 1.75 0 0 1 13.25 16H2.75A1.75 1.75 0 0 1 1 14.25V3.75C1 2.784 1.784 2 2.75 2H4V.75A.75.75 0 0 1 4.75 0ZM2.5 7.5v6.75c0 .138.112.25.25.25h10.5a.25.25 0 0 0 .25-.25V7.5Z"/>
   </svg>`;
 }
 
 function pinIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="m12.596 11.596-3.535 3.536a1.5 1.5 0 0 1-2.122 0l-3.535-3.536a6.5 6.5 0 1 1 9.192 0Zm-1.06-1.06a5 5 0 1 0-7.072 0L8 14.07l3.536-3.534ZM8 9a2 2 0 1 1-.001-3.999A2 2 0 0 1 8 9Z"/>
   </svg>`;
 }
 
 function linkIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 2 2 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a2 2 0 0 1 0-2.83l2.5-2.5a2 2 0 0 1 2.83 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 .5.5 0 0 0-.707 0l-2.5 2.5a.5.5 0 0 0 .707.707l1.25-1.25a.751.751 0 1 1 1.06 1.06l-1.25 1.25a2 2 0 0 1-2.83 0Z"/>
   </svg>`;
 }
 
 function orgIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="M1.5 14.25c0 .138.112.25.25.25H4v-1.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 .75.75v1.25h2.25a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25ZM0 14.25C0 15.216.784 16 1.75 16H14.25A1.75 1.75 0 0 0 16 14.25v-3.5A1.75 1.75 0 0 0 14.25 9H10.5v5.25a.25.25 0 0 1-.25.25H1.75A1.75 1.75 0 0 1 0 12.75ZM3.75 3h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1 0-1.5ZM3 7.25a.75.75 0 0 1 .75-.75h.5a.75.75 0 0 1 0 1.5h-.5A.75.75 0 0 1 3 7.25Zm4 0A.75.75 0 0 1 7.75 6.5h.5a.75.75 0 0 1 0 1.5h-.5A.75.75 0 0 1 7 7.25Zm-3.25-2.5h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1 0-1.5ZM7 4.75A.75.75 0 0 1 7.75 4h.5a.75.75 0 0 1 0 1.5h-.5A.75.75 0 0 1 7 4.75Z"/>
   </svg>`;
 }
 
 function githubIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
   </svg>`;
 }
 
 function searchIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
     <path d="M10.68 11.74a6 6 0 0 1-7.922-8.982 6 6 0 0 1 8.982 7.922l3.04 3.04a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215ZM11.5 7a4.499 4.499 0 1 0-8.997 0A4.499 4.499 0 0 0 11.5 7Z"/>
   </svg>`;
 }
 
 function errorIcon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="white">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="white" aria-hidden="true">
     <path d="M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z"/>
   </svg>`;
 }
 
 function starIcon(count) {
   return `<span class="star-count">
-    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
       <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Z"/>
     </svg>
     ${formatCount(count)}
@@ -560,3 +658,7 @@ function sanitizeUrl(url) {
 function trimUrl(url) {
   return url.replace(/^https?:\/\/(www\.)?/, '').replace(/\/$/, '');
 }
+
+/* ─── Default Search ──────────────────────────────── */
+/* Run on load so the dashboard isn't empty on first open */
+startSearch('taiwrash');
