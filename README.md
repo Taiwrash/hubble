@@ -1,3 +1,10 @@
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+# github-profile-analyser---instructor-sample-hubble
+Team Project: GitHub Profile Analyser - INSTRUCTOR SAMPLE - hubble
+=======
+>>>>>>> 6e483bf (initial commit)
 # Hubble — User Manual
 
 > **Explore the universe of open source.**
@@ -247,3 +254,7 @@ Hubble follows **Dieter Rams' 10 Principles of Good Design**:
 ---
 
 *Built with ♥ for the GitHub REST API intermediate challenge.*
+<<<<<<< HEAD
+=======
+>>>>>>> a26ba48 (initial commit)
+>>>>>>> 6e483bf (initial commit)

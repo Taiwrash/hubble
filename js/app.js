@@ -136,6 +136,7 @@ async function streamLanguages(username, repos, signal) {
   getChartCenterNum().textContent = '0';
   getChartCenterLbl().textContent = 'analysed';
 
+<<<<<<< HEAD
   const langMaps = [];
 
   for (const repo of repos) {
@@ -148,6 +149,32 @@ async function streamLanguages(username, repos, signal) {
       /* Merge into accumulator */
       if (map) {
         for (const [lang, bytes] of Object.entries(map)) {
+=======
+  // Determine a safe limit of detailed API requests based on remaining rate limit.
+  // Leave at least 5 requests remaining for safety and cap at 15 for responsiveness.
+  const detailedLimit = Math.max(0, Math.min(15, rateLimit.remaining - 5));
+
+  for (let i = 0; i < repos.length; i++) {
+    if (signal.aborted) break;
+    const repo = repos[i];
+
+    try {
+      // Only fetch detailed language breakdown for the top N repos (sorted by stars) to conserve rate limits
+      if (i < detailedLimit) {
+        const map = await fetchRepoLanguages(username, repo.name);
+
+        /* Merge into accumulator */
+        if (map) {
+          for (const [lang, bytes] of Object.entries(map)) {
+            langAccumulator[lang] = (langAccumulator[lang] || 0) + bytes;
+          }
+        }
+      } else {
+        // Fallback: use pre-fetched primary language and estimate weight from repository size
+        if (repo.language) {
+          const lang = repo.language;
+          const bytes = (repo.size || 1) * 1024; // size is in KB, convert to bytes
+>>>>>>> 6e483bf (initial commit)
           langAccumulator[lang] = (langAccumulator[lang] || 0) + bytes;
         }
       }
@@ -579,5 +606,10 @@ function trimUrl(url) {
 }
 
 /* ─── Default Search ──────────────────────────────── */
+<<<<<<< HEAD
 /* Run on load so the dashboard isn't empty on first open */
 startSearch('taiwrash');
+=======
+/* The dashboard starts with the beautiful landing/hero page. */
+/* Users can select from the example tags or type any username to start. */
+>>>>>>> 6e483bf (initial commit)
