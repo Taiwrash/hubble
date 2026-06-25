@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hubble — Presentation Slides</title>
+  <meta name="description" content="Hubble project presentation — GitHub Profile Analytics Dashboard">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── Slide Design System ──────────────────── */
+    :root {
+      --bg:        #F7F7F5;
+      --surface:   #FFFFFF;
+      --border:    #E4E4E0;
+      --text-1:    #1A1A18;
+      --text-2:    #6B6B66;
+      --text-3:    #A8A8A2;
+      --accent:    #0969DA;
+      --mono:      'JetBrains Mono', monospace;
+      --sans:      'Inter', sans-serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      font-family: var(--sans);
+      background: #0D0D0C;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── Slide Container ──────────────────────── */
+    .deck {
+      width: 100vw; height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      display: none;
+      width: min(960px, 94vw);
+      aspect-ratio: 16 / 9;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+    }
+    .slide.active { display: flex; }
+
+    /* ─── Slide Variants ───────────────────────── */
+    .slide-light {
+      background: var(--bg);
+      color: var(--text-1);
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: clamp(40px, 6%, 80px) clamp(48px, 8%, 96px);
+    }
+
+    .slide-dark {
+      background: var(--text-1);
+      color: white;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      padding: clamp(40px, 6%, 80px) clamp(48px, 8%, 96px);
+    }
+
+    .slide-split {
+      background: var(--bg);
+      color: var(--text-1);
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    /* ─── Typography ───────────────────────────── */
+    .eyebrow {
+      font-size: clamp(0.625rem, 1.2vw, 0.8125rem);
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: clamp(12px, 2vw, 20px);
+    }
+
+    .slide-dark .eyebrow { color: rgba(255,255,255,0.35); }
+
+    .slide-title {
+      font-size: clamp(1.75rem, 4.5vw, 3.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      margin-bottom: clamp(12px, 2vw, 24px);
+    }
+
+    .slide-subtitle {
+      font-size: clamp(0.875rem, 1.8vw, 1.125rem);
+      font-weight: 400;
+      line-height: 1.6;
+      color: var(--text-2);
+      max-width: 60ch;
+    }
+
+    .slide-dark .slide-subtitle { color: rgba(255,255,255,0.55); }
+
+    .mono-tag {
+      font-family: var(--mono);
+      font-size: clamp(0.75rem, 1.4vw, 1rem);
+      background: rgba(9,105,218,0.12);
+      color: var(--accent);
+      border: 1px solid rgba(9,105,218,0.25);
+      border-radius: 6px;
+      padding: 2px 10px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+
+    .slide-dark .mono-tag {
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.8);
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    /* ─── Slide 1 — Cover ──────────────────────── */
+    .cover-logo {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: clamp(24px, 4vw, 48px);
+    }
+    .cover-logo-icon {
+      width: clamp(40px, 5vw, 64px);
+      height: clamp(40px, 5vw, 64px);
+      background: white;
+      border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .cover-logo-icon svg { width: 55%; height: 55%; }
+    .cover-logo-name {
+      font-size: clamp(1.5rem, 3.5vw, 2.5rem);
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.04em;
+    }
+
+    .cover-tagline {
+      font-size: clamp(0.8125rem, 1.6vw, 1.0625rem);
+      color: rgba(255,255,255,0.45);
+      font-style: italic;
+      margin-top: 8px;
+    }
+
+    /* Decorative rings */
+    .cover-rings {
+      position: absolute;
+      right: -80px; top: 50%;
+      transform: translateY(-50%);
+      opacity: 0.06;
+    }
+
+    /* ─── Slide 2 — Problem ────────────────────── */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(12px, 2vw, 24px);
+      margin-top: clamp(20px, 3vw, 32px);
+      width: 100%;
+    }
+    .problem-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: clamp(16px, 2.5vw, 24px);
+    }
+    .problem-number {
+      font-family: var(--mono);
+      font-size: clamp(1.25rem, 2.5vw, 2rem);
+      font-weight: 700;
+      color: var(--text-3);
+      margin-bottom: 8px;
+    }
+    .problem-text {
+      font-size: clamp(0.75rem, 1.3vw, 0.875rem);
+      color: var(--text-2);
+      line-height: 1.55;
+    }
+
+    /* ─── Slide 3 — Solution ───────────────────── */
+    .feature-list {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1.8vw, 18px);
+      margin-top: clamp(20px, 3vw, 32px);
+      width: 100%;
+    }
+    .feature-row {
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 2vw, 20px);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: clamp(12px, 2vw, 18px) clamp(16px, 2.5vw, 24px);
+    }
+    .feature-num {
+      font-family: var(--mono);
+      font-size: clamp(0.6875rem, 1.2vw, 0.875rem);
+      color: rgba(255,255,255,0.3);
+      font-weight: 500;
+      width: 24px;
+      flex-shrink: 0;
+    }
+    .feature-text {
+      font-size: clamp(0.8125rem, 1.4vw, 1rem);
+      font-weight: 500;
+      color: rgba(255,255,255,0.9);
+      flex: 1;
+    }
+    .feature-badge {
+      font-size: clamp(0.625rem, 1vw, 0.75rem);
+      padding: 2px 10px;
+      border-radius: 20px;
+      background: rgba(9,105,218,0.3);
+      color: #93c5fd;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* ─── Slide 4 — Design Principles ─────────── */
+    .rams-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: clamp(8px, 1.5vw, 14px);
+      margin-top: clamp(20px, 3vw, 32px);
+      width: 100%;
+    }
+    .rams-item {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: clamp(12px, 2vw, 18px);
+    }
+    .rams-label {
+      font-size: clamp(0.5625rem, 1vw, 0.6875rem);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .rams-desc {
+      font-size: clamp(0.6875rem, 1.1vw, 0.8125rem);
+      color: var(--text-2);
+      line-height: 1.45;
+    }
+
+    /* ─── Slide 5 — Architecture ───────────────── */
+    .arch-split-left {
+      flex: 1;
+      padding: clamp(40px, 6%, 80px) clamp(40px, 5%, 72px);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      border-right: 1px solid var(--border);
+    }
+    .arch-split-right {
+      width: 42%;
+      background: var(--text-1);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: clamp(32px, 4%, 56px) clamp(32px, 4%, 56px);
+      border-radius: 0 20px 20px 0;
+    }
+
+    .file-tree {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .file-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: clamp(0.6875rem, 1.2vw, 0.875rem);
+    }
+    .file-indent { width: 20px; }
+    .file-icon {
+      font-size: clamp(0.75rem, 1.2vw, 0.875rem);
+      width: 18px;
+      text-align: center;
+    }
+    .file-name { color: rgba(255,255,255,0.85); }
+    .file-comment {
+      font-size: clamp(0.5625rem, 1vw, 0.75rem);
+      color: rgba(255,255,255,0.25);
+      margin-left: auto;
+    }
+    .file-dir { color: rgba(255,255,255,0.45); }
+
+    .tech-stack {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.5vw, 14px);
+      margin-top: clamp(16px, 2.5vw, 24px);
+    }
+    .tech-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .tech-dot {
+      width: 8px; height: 8px;
+      border-radius: 2px;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .tech-label {
+      font-size: clamp(0.75rem, 1.3vw, 0.9375rem);
+      color: var(--text-2);
+    }
+    .tech-value {
+      font-size: clamp(0.6875rem, 1.1vw, 0.8125rem);
+      color: var(--text-3);
+      margin-left: auto;
+    }
+
+    /* ─── Slide 6 — Thank You ──────────────────── */
+    .thankyou-links {
+      display: flex;
+      gap: clamp(12px, 2vw, 20px);
+      margin-top: clamp(24px, 4vw, 40px);
+      flex-wrap: wrap;
+    }
+    .link-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: clamp(10px, 1.5vw, 14px) clamp(16px, 2.5vw, 22px);
+      color: rgba(255,255,255,0.8);
+      font-size: clamp(0.75rem, 1.3vw, 0.9375rem);
+      font-weight: 500;
+      text-decoration: none;
+    }
+
+    .big-stat {
+      font-size: clamp(2rem, 5vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      color: white;
+      line-height: 1;
+    }
+    .stats-row {
+      display: flex;
+      gap: clamp(24px, 5vw, 56px);
+      margin-top: clamp(24px, 4vw, 40px);
+    }
+    .stat-block { display: flex; flex-direction: column; gap: 4px; }
+    .stat-lbl {
+      font-size: clamp(0.625rem, 1.1vw, 0.8125rem);
+      color: rgba(255,255,255,0.35);
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ─── Slide Number ─────────────────────────── */
+    .slide-number {
+      position: absolute;
+      bottom: clamp(16px, 2.5vw, 24px);
+      right: clamp(20px, 3vw, 32px);
+      font-size: clamp(0.6rem, 1vw, 0.75rem);
+      font-family: var(--mono);
+      color: rgba(255,255,255,0.2);
+    }
+    .slide-light .slide-number { color: var(--text-3); }
+
+    /* ─── Navigation ───────────────────────────── */
+    .nav {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      z-index: 100;
+    }
+    .nav-btn {
+      width: 44px; height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      color: white;
+      font-size: 1.125rem;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+    .nav-btn:hover { background: rgba(255,255,255,0.22); }
+    .nav-btn:disabled { opacity: 0.25; pointer-events: none; }
+
+    .nav-dots {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .nav-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.25);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-dot.active {
+      background: white;
+      width: 20px;
+      border-radius: 3px;
+    }
+
+    /* ─── Progress bar ─────────────────────────── */
+    .progress-bar {
+      position: fixed;
+      top: 0; left: 0;
+      height: 2px;
+      background: #0969DA;
+      transition: width 0.3s ease;
+      z-index: 200;
+    }
+
+    /* ─── Keyboard hint ────────────────────────── */
+    .kb-hint {
+      position: fixed;
+      top: 20px; right: 24px;
+      font-size: 0.6875rem;
+      color: rgba(255,255,255,0.3);
+      font-family: var(--mono);
+    }
+
+    /* ─── Animations ───────────────────────────── */
+    @keyframes slide-in {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .slide.active .slide-title,
+    .slide.active .slide-subtitle,
+    .slide.active .eyebrow,
+    .slide.active .feature-list,
+    .slide.active .problem-grid,
+    .slide.active .rams-grid,
+    .slide.active .arch-split-left,
+    .slide.active .arch-split-right,
+    .slide.active .thankyou-links,
+    .slide.active .stats-row,
+    .slide.active .cover-logo {
+      animation: slide-in 0.5s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    .slide.active .slide-subtitle { animation-delay: 60ms; }
+    .slide.active .feature-list   { animation-delay: 100ms; }
+    .slide.active .problem-grid   { animation-delay: 100ms; }
+    .slide.active .rams-grid      { animation-delay: 100ms; }
+    .slide.active .arch-split-right { animation-delay: 80ms; }
+    .slide.active .thankyou-links  { animation-delay: 80ms; }
+    .slide.active .stats-row       { animation-delay: 80ms; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Progress -->
+  <div class="progress-bar" id="progress-bar" style="width:16.66%"></div>
+
+  <!-- Keyboard hint -->
+  <div class="kb-hint" aria-hidden="true">← → to navigate · F for fullscreen</div>
+
+  <!-- Slides -->
+  <div class="deck" id="deck" role="main" aria-label="Slide deck">
+
+    <!-- ─── Slide 1: Cover ─────────────────── -->
+    <section class="slide slide-dark active" role="region" aria-label="Slide 1: Title" aria-roledescription="slide">
+      <!-- Background rings decoration -->
+      <div class="cover-rings" aria-hidden="true">
+        <svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="250" cy="250" r="230" fill="none" stroke="white" stroke-width="1.5"/>
+          <circle cx="250" cy="250" r="180" fill="none" stroke="white" stroke-width="1.5"/>
+          <circle cx="250" cy="250" r="130" fill="none" stroke="white" stroke-width="1.5"/>
+          <circle cx="250" cy="250" r="80"  fill="none" stroke="white" stroke-width="1.5"/>
+          <circle cx="250" cy="250" r="25"  fill="none" stroke="white" stroke-width="1.5"/>
+          <circle cx="250" cy="250" r="5"   fill="white"/>
+        </svg>
+      </div>
+
+      <div class="cover-logo">
+        <div class="cover-logo-icon">
+          <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="16" cy="16" r="10" fill="none" stroke="#1A1A18" stroke-width="3"/>
+            <circle cx="16" cy="16" r="3" fill="#1A1A18"/>
+          </svg>
+        </div>
+        <span class="cover-logo-name">Hubble</span>
+      </div>
+
+      <div class="eyebrow">GitHub Profile Analytics Dashboard</div>
+      <h1 class="slide-title" style="color:white">
+        Explore the<br>universe of<br>open source.
+      </h1>
+      <p class="cover-tagline">Built with the GitHub REST API · Vanilla HTML, CSS & JS</p>
+
+      <span class="slide-number">01 / 06</span>
+    </section>
+
+    <!-- ─── Slide 2: Problem ───────────────── -->
+    <section class="slide slide-light" role="region" aria-label="Slide 2: Problem" aria-roledescription="slide" style="display:none">
+      <div class="eyebrow">The Challenge</div>
+      <h2 class="slide-title">GitHub profiles<br>hide more than<br>they reveal.</h2>
+
+      <div class="problem-grid">
+        <div class="problem-item">
+          <div class="problem-number">01</div>
+          <div class="problem-text">Language data is buried across dozens of individual repositories — impossible to see at a glance.</div>
+        </div>
+        <div class="problem-item">
+          <div class="problem-number">02</div>
+          <div class="problem-text">Repo lists default to "recently pushed" — top projects by impact are never surfaced first.</div>
+        </div>
+        <div class="problem-item">
+          <div class="problem-number">03</div>
+          <div class="problem-text">Profile pages show raw numbers — no visual context for followers, stars, or activity trends.</div>
+        </div>
+        <div class="problem-item">
+          <div class="problem-number">04</div>
+          <div class="problem-text">No single view combines profile data, sorted repos, and language breakdown in one place.</div>
+        </div>
+      </div>
+
+      <span class="slide-number">02 / 06</span>
+    </section>
+
+    <!-- ─── Slide 3: Solution ──────────────── -->
+    <section class="slide slide-dark" role="region" aria-label="Slide 3: Solution" aria-roledescription="slide" style="display:none">
+      <div class="eyebrow">The Solution</div>
+      <h2 class="slide-title" style="color:white">Hubble surfaces<br>what matters.</h2>
+
+      <div class="feature-list">
+        <div class="feature-row">
+          <span class="feature-num">01</span>
+          <span class="feature-text">Profile card — avatar, bio, location, join date, live stats</span>
+          <span class="feature-badge">Profile</span>
+        </div>
+        <div class="feature-row">
+          <span class="feature-num">02</span>
+          <span class="feature-text">Repositories sorted by ⭐ stars — language badges, descriptions, update time</span>
+          <span class="feature-badge">Repos</span>
+        </div>
+        <div class="feature-row">
+          <span class="feature-num">03</span>
+          <span class="feature-text">Live language chart — SVG donut updates as each repo's data loads</span>
+          <span class="feature-badge">Live Chart</span>
+        </div>
+        <div class="feature-row">
+          <span class="feature-num">04</span>
+          <span class="feature-text">Rate-limit monitor — visible counter, graceful degradation, reset time shown</span>
+          <span class="feature-badge">API Safety</span>
+        </div>
+      </div>
+
+      <span class="slide-number">03 / 06</span>
+    </section>
+
+    <!-- ─── Slide 4: Design Principles ─────── -->
+    <section class="slide slide-light" role="region" aria-label="Slide 4: Design Principles" aria-roledescription="slide" style="display:none">
+      <div class="eyebrow">Design Philosophy · Dieter Rams, 1980</div>
+      <h2 class="slide-title">Good design is<br>as little design<br>as possible.</h2>
+
+      <div class="rams-grid">
+        <div class="rams-item">
+          <div class="rams-label">Innovative</div>
+          <div class="rams-desc">Live chart updating as data streams in — new pattern for analytics UIs.</div>
+        </div>
+        <div class="rams-item">
+          <div class="rams-label">Useful</div>
+          <div class="rams-desc">One search → full picture. No extra steps, no unnecessary pages.</div>
+        </div>
+        <div class="rams-item">
+          <div class="rams-item">
+          <div class="rams-label">Aesthetic</div>
+          <div class="rams-desc">Single accent colour, Inter typeface, generous whitespace, 8px grid.</div>
+        </div>
+        </div>
+        <div class="rams-item">
+          <div class="rams-label">Honest</div>
+          <div class="rams-desc">Rate limit visible at all times. Errors explained plainly, never hidden.</div>
+        </div>
+        <div class="rams-item">
+          <div class="rams-label">Unobtrusive</div>
+          <div class="rams-desc">No gradients, no hero images, no noise. Data is the design.</div>
+        </div>
+        <div class="rams-item">
+          <div class="rams-label">Minimal</div>
+          <div class="rams-desc">Zero JS dependencies. Every element earns its place on the page.</div>
+        </div>
+      </div>
+
+      <span class="slide-number">04 / 06</span>
+    </section>
+
+    <!-- ─── Slide 5: Architecture ──────────── -->
+    <section class="slide slide-split" role="region" aria-label="Slide 5: Architecture" aria-roledescription="slide" style="display:none">
+
+      <div class="arch-split-left">
+        <div class="eyebrow">Technical Architecture</div>
+        <h2 class="slide-title">Zero<br>dependencies.<br>Pure web.</h2>
+
+        <div class="tech-stack">
+          <div class="tech-item">
+            <span class="tech-dot"></span>
+            <span class="tech-label">HTML5</span>
+            <span class="tech-value">Semantic, accessible</span>
+          </div>
+          <div class="tech-item">
+            <span class="tech-dot" style="background:#563d7c"></span>
+            <span class="tech-label">Vanilla CSS</span>
+            <span class="tech-value">Custom properties, grid</span>
+          </div>
+          <div class="tech-item">
+            <span class="tech-dot" style="background:#f1e05a"></span>
+            <span class="tech-label">ES Modules</span>
+            <span class="tech-value">Native import/export</span>
+          </div>
+          <div class="tech-item">
+            <span class="tech-dot" style="background:#e34c26"></span>
+            <span class="tech-label">SVG Chart</span>
+            <span class="tech-value">Pure SVG, animated paths</span>
+          </div>
+          <div class="tech-item">
+            <span class="tech-dot" style="background:#0969DA"></span>
+            <span class="tech-label">GitHub REST API</span>
+            <span class="tech-value">api.github.com · v2022-11-28</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-split-right">
+        <div style="color:rgba(255,255,255,0.3);font-family:'JetBrains Mono',monospace;font-size:clamp(0.5625rem,1vw,0.75rem);margin-bottom:20px">
+          gh-analyser/
+        </div>
+        <div class="file-tree">
+          <div class="file-row"><span class="file-icon">📄</span><span class="file-name">index.html</span><span class="file-comment">shell</span></div>
+          <div class="file-row"><span class="file-icon">📊</span><span class="file-name">slides.html</span><span class="file-comment">this deck</span></div>
+          <div class="file-row" style="margin-top:8px"><span class="file-dir">css/</span></div>
+          <div class="file-row"><span class="file-indent"></span><span class="file-icon">🎨</span><span class="file-name">style.css</span><span class="file-comment">design system</span></div>
+          <div class="file-row"><span class="file-indent"></span><span class="file-icon">✨</span><span class="file-name">animations.css</span><span class="file-comment">motion</span></div>
+          <div class="file-row" style="margin-top:8px"><span class="file-dir">js/</span></div>
+          <div class="file-row"><span class="file-indent"></span><span class="file-icon">🔌</span><span class="file-name">api.js</span><span class="file-comment">GitHub API</span></div>
+          <div class="file-row"><span class="file-indent"></span><span class="file-icon">📈</span><span class="file-name">chart.js</span><span class="file-comment">SVG donut</span></div>
+          <div class="file-row"><span class="file-indent"></span><span class="file-icon">⚙️</span><span class="file-name">app.js</span><span class="file-comment">orchestration</span></div>
+        </div>
+      </div>
+
+      <span class="slide-number" style="color:rgba(0,0,0,0.2)">05 / 06</span>
+    </section>
+
+    <!-- ─── Slide 6: Thank You ─────────────── -->
+    <section class="slide slide-dark" role="region" aria-label="Slide 6: Thank you" aria-roledescription="slide" style="display:none">
+      <div style="position:absolute;right:-60px;bottom:-80px;opacity:0.04" aria-hidden="true">
+        <svg width="480" height="480" viewBox="0 0 480 480" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="240" cy="240" r="220" fill="none" stroke="white" stroke-width="2"/>
+          <circle cx="240" cy="240" r="170" fill="none" stroke="white" stroke-width="2"/>
+          <circle cx="240" cy="240" r="120" fill="none" stroke="white" stroke-width="2"/>
+          <circle cx="240" cy="240" r="70"  fill="none" stroke="white" stroke-width="2"/>
+          <circle cx="240" cy="240" r="8"   fill="white"/>
+        </svg>
+      </div>
+
+      <div class="eyebrow">Thank You</div>
+      <h2 class="slide-title" style="color:white">
+        Hubble —<br>explore the universe<br>of open source.
+      </h2>
+
+      <div class="stats-row">
+        <div class="stat-block">
+          <span class="big-stat">0</span>
+          <span class="stat-lbl">Dependencies</span>
+        </div>
+        <div class="stat-block">
+          <span class="big-stat">5</span>
+          <span class="stat-lbl">Source files</span>
+        </div>
+        <div class="stat-block">
+          <span class="big-stat">∞</span>
+          <span class="stat-lbl">Profiles to explore</span>
+        </div>
+      </div>
+
+      <div class="thankyou-links">
+        <a href="index.html" class="link-pill">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>
+          Open Hubble
+        </a>
+        <a href="README.md" class="link-pill">
+          📖 User Manual
+        </a>
+      </div>
+
+      <span class="slide-number">06 / 06</span>
+    </section>
+
+  </div><!-- /deck -->
+
+  <!-- Navigation -->
+  <nav class="nav" role="navigation" aria-label="Slide navigation">
+    <button class="nav-btn" id="prev-btn" aria-label="Previous slide" disabled>←</button>
+    <div class="nav-dots" id="nav-dots" role="tablist" aria-label="Slide indicators">
+      <button class="nav-dot active" role="tab" aria-selected="true" aria-label="Slide 1" data-index="0"></button>
+      <button class="nav-dot" role="tab" aria-selected="false" aria-label="Slide 2" data-index="1"></button>
+      <button class="nav-dot" role="tab" aria-selected="false" aria-label="Slide 3" data-index="2"></button>
+      <button class="nav-dot" role="tab" aria-selected="false" aria-label="Slide 4" data-index="3"></button>
+      <button class="nav-dot" role="tab" aria-selected="false" aria-label="Slide 5" data-index="4"></button>
+      <button class="nav-dot" role="tab" aria-selected="false" aria-label="Slide 6" data-index="5"></button>
+    </div>
+    <button class="nav-btn" id="next-btn" aria-label="Next slide">→</button>
+  </nav>
+
+  <script>
+    const slides   = document.querySelectorAll('.slide');
+    const dots     = document.querySelectorAll('.nav-dot');
+    const prevBtn  = document.getElementById('prev-btn');
+    const nextBtn  = document.getElementById('next-btn');
+    const progress = document.getElementById('progress-bar');
+    const TOTAL    = slides.length;
+    let current = 0;
+
+    function goTo(n) {
+      slides[current].classList.remove('active');
+      slides[current].style.display = 'none';
+      dots[current].classList.remove('active');
+      dots[current].setAttribute('aria-selected', 'false');
+
+      current = Math.max(0, Math.min(n, TOTAL - 1));
+
+      slides[current].style.display = 'flex';
+      /* Force reflow for animation restart */
+      void slides[current].offsetWidth;
+      slides[current].classList.add('active');
+      dots[current].classList.add('active');
+      dots[current].setAttribute('aria-selected', 'true');
+
+      prevBtn.disabled = current === 0;
+      nextBtn.disabled = current === TOTAL - 1;
+      progress.style.width = `${((current + 1) / TOTAL) * 100}%`;
+    }
+
+    prevBtn.addEventListener('click', () => goTo(current - 1));
+    nextBtn.addEventListener('click', () => goTo(current + 1));
+
+    dots.forEach(dot => {
+      dot.addEventListener('click', () => goTo(parseInt(dot.dataset.index, 10)));
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   goTo(current - 1);
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  goTo(current + 1);
+      if (e.key === 'f' || e.key === 'F') document.documentElement.requestFullscreen?.();
+      if (e.key === 'Escape') document.exitFullscreen?.();
+    });
+
+    /* Swipe support */
+    let touchX = null;
+    document.addEventListener('touchstart', e => { touchX = e.changedTouches[0].clientX; });
+    document.addEventListener('touchend', e => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1));
+      touchX = null;
+    });
+  </script>
+
+</body>
+</html>

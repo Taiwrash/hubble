@@ -1,0 +1,216 @@
+/* =====================================================
+   HUBBLE — Motion Library
+   Smooth, purposeful animations
+   ===================================================== */
+
+/* ─── Keyframes ───────────────────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-down {
+  from {
+    opacity: 0;
+    transform: translateY(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse-ring {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes progress-fill {
+  from { width: 0%; }
+  to   { width: var(--target-width, 100%); }
+}
+
+@keyframes number-bounce {
+  0%   { transform: scale(1); }
+  50%  { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+
+@keyframes chart-draw {
+  from {
+    stroke-dashoffset: 1000;
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes segment-appear {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes ripple {
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes logo-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(9, 105, 218, 0); }
+  50%       { box-shadow: 0 0 0 6px rgba(9, 105, 218, 0.12); }
+}
+
+/* ─── Utility Animation Classes ───────────────────── */
+
+.animate-fade-in {
+  animation: fade-in var(--t-slow) var(--ease) forwards;
+}
+
+.animate-fade-up {
+  animation: fade-up var(--t-slow) var(--ease) forwards;
+  opacity: 0;
+}
+
+.animate-fade-down {
+  animation: fade-down var(--t-base) var(--ease) forwards;
+}
+
+.animate-scale-in {
+  animation: scale-in var(--t-slow) var(--ease) forwards;
+  opacity: 0;
+}
+
+.animate-slide-right {
+  animation: slide-in-right var(--t-slow) var(--ease) forwards;
+  opacity: 0;
+}
+
+/* ─── Staggered Children ──────────────────────────── */
+/* Each child gets delay based on index */
+.stagger > * {
+  opacity: 0;
+  animation: fade-up var(--t-slow) var(--ease) forwards;
+}
+
+.stagger > *:nth-child(1)  { animation-delay: 0ms; }
+.stagger > *:nth-child(2)  { animation-delay: 60ms; }
+.stagger > *:nth-child(3)  { animation-delay: 120ms; }
+.stagger > *:nth-child(4)  { animation-delay: 180ms; }
+.stagger > *:nth-child(5)  { animation-delay: 240ms; }
+.stagger > *:nth-child(6)  { animation-delay: 300ms; }
+.stagger > *:nth-child(7)  { animation-delay: 360ms; }
+.stagger > *:nth-child(8)  { animation-delay: 420ms; }
+.stagger > *:nth-child(9)  { animation-delay: 480ms; }
+.stagger > *:nth-child(10) { animation-delay: 540ms; }
+.stagger > *:nth-child(n+11) { animation-delay: 540ms; }
+
+/* ─── Repo Card Stagger ────────────────────────────── */
+.repo-card {
+  opacity: 0;
+  animation: fade-up var(--t-slow) var(--ease) forwards;
+}
+
+/* ─── Profile Card Entry ──────────────────────────── */
+.profile-card-animate {
+  animation: fade-up 500ms var(--ease) forwards;
+}
+
+/* ─── Chart Segment Transition ─────────────────────── */
+.chart-svg-group {
+  transform-origin: center;
+}
+
+.donut-segment {
+  transition: opacity 200ms ease, transform 200ms ease;
+  transform-origin: 130px 130px; /* SVG center */
+}
+
+.donut-segment:hover {
+  opacity: 0.85;
+  transform: scale(1.03);
+}
+
+/* ─── Number Counter ──────────────────────────────── */
+.stat-value.updated {
+  animation: number-bounce 300ms var(--ease);
+}
+
+/* ─── Page Transition ─────────────────────────────── */
+.page-enter {
+  animation: fade-up 400ms var(--ease) forwards;
+}
+
+/* ─── Hover Lift ──────────────────────────────────── */
+.hover-lift {
+  transition: transform var(--t-fast) var(--ease), box-shadow var(--t-fast) var(--ease);
+}
+.hover-lift:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+/* ─── Chart Appear ────────────────────────────────── */
+.chart-group-enter {
+  animation: scale-in 500ms var(--ease) forwards;
+}
+
+/* ─── Prefers Reduced Motion ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
