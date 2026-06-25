@@ -266,36 +266,6 @@ p { color: var(--text-2); font-size: 0.9375rem; }
   pointer-events: none;
 }
 
-/* ─── Hide Results Button ──────────────────────────── */
-.hide-results-btn {
-  height: 32px;
-  padding: 0 var(--s-3);
-  background: var(--surface-2);
-  border: 1px solid var(--border);
-  color: var(--text-2);
-  border-radius: var(--radius-full);
-  font-size: 0.75rem;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: var(--s-1);
-  transition: background var(--t-fast), border-color var(--t-fast), color var(--t-fast), transform var(--t-fast);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-.hide-results-btn:hover {
-  background: var(--error-bg);
-  border-color: #fca5a5;
-  color: var(--error);
-  transform: translateY(-1px);
-}
-
-.hide-results-btn:active {
-  transform: translateY(0);
-}
-
 /* ─── Rate Limit Badge ────────────────────────────── */
 .rate-limit-badge {
   display: flex;

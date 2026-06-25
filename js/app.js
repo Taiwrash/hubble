@@ -26,7 +26,6 @@ const rateLimitEl = $('rate-limit');
 const rateDotEl   = $('rate-dot');
 const rateCountEl = $('rate-count');
 const mainContent = $('main-content');
-const headerInner = $$('.header-inner');
 
 /* Chart elements are rendered dynamically — look them up lazily */
 const getChartSvg       = () => $('donut-svg');
@@ -118,97 +117,17 @@ async function startSearch(username) {
     /* ── Step 3: Stream Language Data ─────────── */
     setLoading(false);
     showLiveIndicator(true);
-    showHideResultsBtn(true);
     announce(`Loaded profile and ${repos.length} repositories for ${username}. Analysing programming languages...`);
     streamLanguages(username, repos, abortController.signal);
 
   } catch (err) {
     setLoading(false);
-    showHideResultsBtn(true);
     renderError(err);
     announce(`Error loading profile: ${err.message || err}`);
   }
 }
 
-/* ─── Hide Results ────────────────────────────────── */
-function showHideResultsBtn(on) {
-  let btn = $('hide-results-btn');
 
-  if (on) {
-    if (btn) return; // already present
-    btn = document.createElement('button');
-    btn.id = 'hide-results-btn';
-    btn.className = 'hide-results-btn';
-    btn.setAttribute('aria-label', 'Hide results and return to home');
-    btn.innerHTML = `
-      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-        <path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.749.749 0 0 1 1.275.326.749.749 0 0 1-.215.734L9.06 8l3.22 3.22a.749.749 0 0 1-.326 1.275.749.749 0 0 1-.734-.215L8 9.06l-3.22 3.22a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06Z"/>
-      </svg>
-      Hide Results
-    `;
-    btn.addEventListener('click', hideResults);
-    headerInner.appendChild(btn);
-  } else {
-    btn?.remove();
-  }
-}
-
-function hideResults() {
-  /* Cancel any in-flight requests */
-  if (abortController) {
-    abortController.abort();
-    abortController = null;
-  }
-
-  /* Reset state */
-  langAccumulator = {};
-  reposAnalysed   = 0;
-  totalRepos      = 0;
-  currentUsername = null;
-  searchInput.value = '';
-
-  /* Remove button */
-  showHideResultsBtn(false);
-
-  /* Restore hero */
-  mainContent.innerHTML = `
-    <div class="hero" id="hero-section">
-      <div class="animate-fade-up">
-        <h1 class="hero-title">Explore any<br>GitHub profile.</h1>
-      </div>
-      <p class="hero-subtitle animate-fade-up" style="animation-delay:80ms">
-        Search a username to see repos, language breakdowns,
-        and profile analytics — live.
-      </p>
-      <div class="hero-hint animate-fade-up" style="animation-delay:160ms">
-        <span>Try</span>
-        <code>taiwrash</code>
-        <span>or</span>
-        <code>torvalds</code>
-      </div>
-      <div class="example-tags animate-fade-up" style="animation-delay:220ms" aria-label="Example GitHub usernames">
-        <button class="example-tag" data-user="taiwrash" aria-label="Search taiwrash">taiwrash</button>
-        <button class="example-tag" data-user="torvalds" aria-label="Search torvalds">torvalds</button>
-        <button class="example-tag" data-user="gaearon"  aria-label="Search gaearon">gaearon</button>
-        <button class="example-tag" data-user="sindresorhus" aria-label="Search sindresorhus">sindresorhus</button>
-        <button class="example-tag" data-user="DHH"      aria-label="Search DHH">DHH</button>
-        <button class="example-tag" data-user="yyx990803" aria-label="Search yyx990803">yyx990803</button>
-      </div>
-      <div style="margin-top:var(--s-10);opacity:0.06" aria-hidden="true">
-        <svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-          <circle cx="100" cy="100" r="90" fill="none" stroke="#1A1A18" stroke-width="1"/>
-          <circle cx="100" cy="100" r="70" fill="none" stroke="#1A1A18" stroke-width="1"/>
-          <circle cx="100" cy="100" r="50" fill="none" stroke="#1A1A18" stroke-width="1"/>
-          <circle cx="100" cy="100" r="30" fill="none" stroke="#1A1A18" stroke-width="1"/>
-          <circle cx="100" cy="100" r="6" fill="#1A1A18"/>
-        </svg>
-      </div>
-    </div>
-  `;
-
-  announce("Results hidden. Returned to home page.");
-  searchInput.focus();
-}
 
 /* ─── Stream Language Analysis ────────────────────── */
 async function streamLanguages(username, repos, signal) {
