@@ -456,10 +456,16 @@ function setLoading(on) {
   if (on) {
     mainContent.setAttribute('aria-busy', 'true');
     clearContent();
-    mainContent.appendChild(skeletonProfile());
-    mainContent.appendChild(skeletonRepos());
+    const sProfile = skeletonProfile();
+    sProfile.classList.add('skeleton-loading-placeholder');
+    const sRepos = skeletonRepos();
+    sRepos.classList.add('skeleton-loading-placeholder');
+    mainContent.appendChild(sProfile);
+    mainContent.appendChild(sRepos);
   } else {
     mainContent.removeAttribute('aria-busy');
+    const placeholders = mainContent.querySelectorAll('.skeleton-loading-placeholder');
+    placeholders.forEach(el => el.remove());
   }
 }
 
