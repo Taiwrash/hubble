@@ -19,18 +19,19 @@ import {
 const $  = id => document.getElementById(id);
 const $$ = sel => document.querySelector(sel);
 
-const searchForm     = $('search-form');
-const searchInput    = $('search-input');
-const searchBtn      = $('search-btn');
-const rateLimitEl    = $('rate-limit');
-const rateDotEl      = $('rate-dot');
-const rateCountEl    = $('rate-count');
-const mainContent    = $('main-content');
-const chartSvg       = $('donut-svg');
-const chartLegend    = $('chart-legend');
-const chartCenterNum = $('chart-center-num');
-const chartCenterLbl = $('chart-center-lbl');
-const liveIndicator  = $('live-indicator');
+const searchForm  = $('search-form');
+const searchInput = $('search-input');
+const searchBtn   = $('search-btn');
+const rateLimitEl = $('rate-limit');
+const rateDotEl   = $('rate-dot');
+const rateCountEl = $('rate-count');
+const mainContent = $('main-content');
+
+/* Chart elements are rendered dynamically — look them up lazily */
+const getChartSvg       = () => $('donut-svg');
+const getChartLegend    = () => $('chart-legend');
+const getChartCenterNum = () => $('chart-center-num');
+const getChartCenterLbl = () => $('chart-center-lbl');
 
 /* ─── State ───────────────────────────────────────── */
 let currentUsername  = null;
@@ -79,8 +80,6 @@ document.addEventListener('click', e => {
 });
 
 async function startSearch(username) {
-  if (username === currentUsername) return;
-  
   /* Cancel any previous language-fetching stream */
   if (abortController) abortController.abort();
   abortController = new AbortController();
@@ -93,8 +92,7 @@ async function startSearch(username) {
   reposAnalysed   = 0;
   totalRepos      = 0;
 
-  setLoading(true);
-  clearContent();
+  setLoading(true); // also calls clearContent()
 
   try {
     /* ── Step 1: Profile ─────────────────────── */
@@ -120,9 +118,9 @@ async function startSearch(username) {
 /* ─── Stream Language Analysis ────────────────────── */
 async function streamLanguages(username, repos, signal) {
   /* Show initial empty chart */
-  renderDonut(chartSvg, [], repos.length);
-  chartCenterNum.textContent = '0';
-  chartCenterLbl.textContent = 'analysed';
+  renderDonut(getChartSvg(), [], repos.length);
+  getChartCenterNum().textContent = '0';
+  getChartCenterLbl().textContent = 'analysed';
 
   const langMaps = [];
 
@@ -156,23 +154,30 @@ async function streamLanguages(username, repos, signal) {
   }
 
   showLiveIndicator(false);
-  chartCenterLbl.textContent = 'languages';
+  const lbl = getChartCenterLbl();
+  if (lbl) lbl.textContent = 'languages';
 }
 
 function updateChart() {
+  const svgEl    = getChartSvg();
+  const legendEl = getChartLegend();
+  const numEl    = getChartCenterNum();
+  const lblEl    = getChartCenterLbl();
+  if (!svgEl) return; // Not yet rendered
+
   /* Sort and prepare segments */
   const sorted = Object.entries(langAccumulator)
     .map(([name, bytes]) => ({ name, bytes }))
     .sort((a, b) => b.bytes - a.bytes);
 
   const segments = prepareSegments(sorted);
-  renderDonut(chartSvg, segments, reposAnalysed);
-  renderLegend(chartLegend, segments);
+  renderDonut(svgEl, segments, reposAnalysed);
+  renderLegend(legendEl, segments);
 
   /* Update centre number */
   const langCount = sorted.length;
-  chartCenterNum.textContent = langCount;
-  chartCenterLbl.textContent = langCount === 1 ? 'language' : 'languages';
+  if (numEl) numEl.textContent = langCount;
+  if (lblEl) lblEl.textContent = langCount === 1 ? 'language' : 'languages';
 }
 
 /* ─── Render Profile ──────────────────────────────── */
